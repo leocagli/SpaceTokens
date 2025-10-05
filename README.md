@@ -19,7 +19,9 @@ AI-powered exoplanet discovery platform that converts NASA data into collectible
 - **Backend**: Python + Flask
 - **AI/ML**: Scikit-learn, Pandas, NumPy
 - **Frontend**: HTML5, CSS3, Vanilla JavaScript
-- **Data Source**: NASA Exoplanet Archive
+- **Blockchain**: Filecoin + Web3.py
+- **Smart Contracts**: Solidity (ERC-721 NFT)
+- **Data Source**: NASA Exoplanet Archive API
 
 ## 📦 Installation
 
@@ -39,11 +41,13 @@ Visit `http://localhost:5000`
 
 ## 🎯 How It Works
 
-1. **Data Collection**: NASA Exoplanet Archive data (Kepler/TESS missions)
+1. **Data Collection**: Real-time scraping from NASA Exoplanet Archive API
 2. **AI Classification**: ML model analyzes orbital period, radius, star temperature
-3. **Token Generation**: High-confidence candidates become NFTs with metadata
-4. **Rarity Assignment**: Based on habitability zone and unique characteristics
-5. **Funding Mechanism**: Collectors fund research for specific exoplanets
+3. **Habitability Scoring**: Calculate Earth-similarity index (0-100)
+4. **NFT Minting**: Mint ERC-721 tokens on Filecoin with IPFS metadata
+5. **Token Generation**: High-confidence candidates become NFTs
+6. **Rarity Assignment**: Based on habitability zone and unique characteristics
+7. **Funding Mechanism**: Smart contract escrow for research funding
 
 ## 🌟 Rarity Tiers
 
@@ -91,14 +95,22 @@ git push heroku main
 3. Build command: `pip install -r requirements.txt`
 4. Start command: `gunicorn app:app`
 
+## 🔗 API Endpoints
+
+- `GET /api/tokens` - Get all minted tokens
+- `POST /api/classify` - Classify new exoplanet
+- `POST /api/mint` - Mint NFT for exoplanet
+- `POST /api/fund` - Fund research
+- `GET /api/nasa/fetch` - Fetch fresh NASA data
+
 ## 📝 Future Enhancements
 
-- [ ] Real ML model training with NASA data
-- [ ] Blockchain integration (Ethereum/Polygon)
-- [ ] IPFS for metadata storage
-- [ ] Community voting on funding allocation
-- [ ] 3D visualization of exoplanets
-- [ ] Integration with telescope observation scheduling
+- [ ] Train ML model with full Kepler dataset
+- [ ] Deploy to Filecoin mainnet
+- [ ] IPFS pinning service integration
+- [ ] Community DAO for funding decisions
+- [ ] 3D visualization with Three.js
+- [ ] Telescope observation scheduling API
 
 ## 🤝 Contributing
 

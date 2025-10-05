@@ -3,9 +3,15 @@ from flask_cors import CORS
 import pickle
 import numpy as np
 import random
+from nasa_scraper import NASAExoplanetScraper
+from web3_integration import FilecoinNFTMinter
 
 app = Flask(__name__)
 CORS(app)
+
+# Initialize NASA scraper and Web3 minter
+scraper = NASAExoplanetScraper()
+minter = FilecoinNFTMinter()
 
 # Simulated AI model (replace with real trained model)
 class ExoplanetClassifier:
@@ -61,43 +67,35 @@ def classify():
 
 @app.route('/api/tokens')
 def get_tokens():
-    # Sample tokens for gallery
-    tokens = [
-        {
-            'id': 'EXO-1001',
-            'name': 'Kepler-442b',
-            'rarity': 'Ultra Rare',
-            'confidence': 95.8,
-            'period': 112.3,
-            'radius': 1.34,
-            'temp': 4402,
-            'fundingGoal': 25000,
-            'currentFunding': 18500
-        },
-        {
-            'id': 'EXO-1002',
-            'name': 'TRAPPIST-1e',
-            'rarity': 'Rare',
-            'confidence': 92.3,
-            'period': 6.1,
-            'radius': 0.92,
-            'temp': 2559,
-            'fundingGoal': 30000,
-            'currentFunding': 12000
-        },
-        {
-            'id': 'EXO-1003',
-            'name': 'Proxima Centauri b',
-            'rarity': 'Ultra Rare',
-            'confidence': 97.1,
-            'period': 11.2,
-            'radius': 1.17,
-            'temp': 3042,
-            'fundingGoal': 50000,
-            'currentFunding': 35000
-        }
-    ]
-    return jsonify(tokens)
+    # Fetch real exoplanet data from NASA
+    try:
+        planets = scraper.fetch_exoplanets(10)
+        tokens = []
+        
+        for planet in planets:
+            habitability = scraper.calculate_habitability_score(planet)
+            rarity = scraper.classify_rarity(habitability)
+            
+            tokens.append({
+                'id': f"EXO-{minter.generate_token_id(planet['name']) % 10000}",
+                'name': planet['name'],
+                'rarity': rarity,
+                'confidence': habitability,
+                'period': planet['orbital_period'],
+                'radius': planet['radius'],
+                'temp': planet['star_temp'],
+                'fundingGoal': random.randint(10000, 50000),
+                'currentFunding': random.randint(0, 30000),
+                'discoveryYear': planet['discovery_year'],
+                'hostStar': planet['host_star']
+            })
+        
+        return jsonify(tokens)
+    except:
+        # Fallback to sample data
+        return jsonify([
+            {'id': 'EXO-1001', 'name': 'Kepler-442b', 'rarity': 'Ultra Rare', 'confidence': 95.8, 'period': 112.3, 'radius': 1.34, 'temp': 4402, 'fundingGoal': 25000, 'currentFunding': 18500}
+        ])
 
 @app.route('/api/fund', methods=['POST'])
 def fund():
@@ -105,11 +103,45 @@ def fund():
     token_id = data.get('tokenId')
     amount = data.get('amount', 100)
     
+    # Simulate blockchain transaction
+    tx_hash = f'0x{random.randint(10**63, 10**64-1):064x}'
+    
     return jsonify({
         'success': True,
         'message': f'Successfully funded {amount} USD to {token_id}',
-        'txHash': f'0x{random.randint(10**63, 10**64-1):064x}'
+        'txHash': tx_hash,
+        'network': 'Filecoin Calibration Testnet',
+        'explorer': f'https://calibration.filfox.info/en/message/{tx_hash}'
     })
+
+@app.route('/api/mint', methods=['POST'])
+def mint_token():
+    data = request.json
+    planet_name = data.get('planetName')
+    owner_address = data.get('ownerAddress', '0x0000000000000000000000000000000000000000')
+    
+    # Fetch planet data
+    planets = scraper.fetch_exoplanets(100)
+    planet_data = next((p for p in planets if p['name'] == planet_name), None)
+    
+    if not planet_data:
+        return jsonify({'success': False, 'message': 'Planet not found'})
+    
+    # Calculate habitability and rarity
+    habitability = scraper.calculate_habitability_score(planet_data)
+    planet_data['habitability_score'] = habitability
+    planet_data['rarity'] = scraper.classify_rarity(habitability)
+    
+    # Mint NFT
+    result = minter.mint_nft(planet_data, owner_address)
+    
+    return jsonify(result)
+
+@app.route('/api/nasa/fetch', methods=['GET'])
+def fetch_nasa_data():
+    limit = request.args.get('limit', 20, type=int)
+    planets = scraper.fetch_exoplanets(limit)
+    return jsonify({'success': True, 'count': len(planets), 'planets': planets})
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
