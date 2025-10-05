@@ -24,10 +24,70 @@
         
         body {
             font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+            background: var(--bg-primary);
             color: var(--text-primary);
             min-height: 100vh;
             line-height: 1.6;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Animated Star Background */
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 3s infinite;
+        }
+
+        .star:nth-child(odd) {
+            animation-delay: 1s;
+        }
+
+        .star:nth-child(3n) {
+            animation-delay: 2s;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
+        /* Shooting Stars */
+        .shooting-star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: linear-gradient(45deg, white, transparent);
+            border-radius: 50%;
+            animation: shoot 3s linear infinite;
+        }
+
+        @keyframes shoot {
+            0% {
+                transform: translateX(-100px) translateY(-100px);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateX(100vw) translateY(100vh);
+                opacity: 0;
+            }
         }
         
         /* Navigation */
@@ -56,6 +116,7 @@
             font-size: 1.5rem;
             font-weight: bold;
             background: linear-gradient(45deg, var(--primary), var(--secondary));
+            background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             text-decoration: none;
@@ -128,41 +189,104 @@
         /* Main Content */
         .main-content {
             margin-top: 80px;
-            padding: 2rem;
+            padding: 2rem 0;
         }
         
         .container {
             max-width: 1400px;
             margin: 0 auto;
+            padding: 0 2rem;
         }
         
         /* Hero Section */
         .hero {
             text-align: center;
-            padding: 4rem 0;
-            background: var(--glass);
-            border-radius: 20px;
-            margin-bottom: 3rem;
-            backdrop-filter: blur(20px);
+            padding: 6rem 0;
+            margin-bottom: 4rem;
+            position: relative;
         }
         
         .hero h1 {
-            font-size: 3.5rem;
-            margin-bottom: 1rem;
-            background: linear-gradient(45deg, var(--primary), var(--accent));
+            font-size: 4.5rem;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(45deg, var(--primary), var(--accent), var(--secondary));
+            background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            background-size: 200% 200%;
+            animation: gradientShift 3s ease-in-out infinite;
+            text-shadow: 0 0 30px rgba(102, 126, 234, 0.5);
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
         }
         
         .hero p {
-            font-size: 1.2rem;
+            font-size: 1.4rem;
             color: var(--text-secondary);
-            margin-bottom: 2rem;
+            margin-bottom: 3rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.8;
+        }
+
+        .hero-cta {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            margin-bottom: 3rem;
+            flex-wrap: wrap;
+        }
+
+        .hero-btn {
+            padding: 1rem 2.5rem;
+            border: none;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-btn-primary {
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            color: white;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .hero-btn-secondary {
+            background: rgba(255,255,255,0.1);
+            color: var(--text-primary);
+            border: 2px solid rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .hero-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4);
+        }
+
+        .hero-btn-primary:hover {
+            background: linear-gradient(45deg, var(--secondary), var(--primary));
+        }
+
+        .hero-btn-secondary:hover {
+            background: rgba(255,255,255,0.15);
+            border-color: var(--primary);
         }
         
         .hero-stats {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(4, 1fr);
             gap: 2rem;
             margin-top: 3rem;
         }
@@ -423,10 +547,43 @@
         @media (max-width: 768px) {
             .nav-links { display: none; }
             .search-bar { margin: 0 1rem; }
-            .hero h1 { font-size: 2.5rem; }
+            .hero { 
+                padding: 4rem 0;
+                margin-bottom: 2rem;
+            }
+            .hero h1 { 
+                font-size: 2.5rem;
+                margin-bottom: 1rem;
+            }
+            .hero p {
+                font-size: 1.1rem;
+                margin-bottom: 2rem;
+            }
+            .hero-cta {
+                flex-direction: column;
+                align-items: center;
+                gap: 1rem;
+                margin-bottom: 2rem;
+            }
+            .hero-btn {
+                width: 100%;
+                max-width: 280px;
+                justify-content: center;
+            }
             .filters-row { flex-direction: column; align-items: stretch; }
             .sort-controls { margin-left: 0; }
             .nft-grid { grid-template-columns: 1fr; }
+            .hero-stats {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero h1 { font-size: 2rem; }
+            .hero-stats {
+                grid-template-columns: 1fr;
+            }
         }
         
         /* Modal */
@@ -472,6 +629,9 @@
     </style>
 </head>
 <body>
+    <!-- Star Background -->
+    <div class="stars" id="stars"></div>
+
     <!-- Navigation -->
     <nav class="navbar">
         <div class="nav-container">
@@ -501,21 +661,32 @@
             <!-- Hero Section -->
             <section class="hero">
                 <h1>Discover Exoplanet NFTs</h1>
-                <p>Own a piece of the universe with scientifically-backed exoplanet tokens</p>
+                <p>Own a piece of the universe with scientifically-backed exoplanet tokens. Each NFT represents real exoplanets discovered by NASA's Kepler and TESS missions, verified by cutting-edge AI analysis.</p>
+                
+                <div class="hero-cta">
+                    <a href="#nftGrid" class="hero-btn hero-btn-primary">
+                        <i class="fas fa-rocket"></i>
+                        Explore Exoplanets
+                    </a>
+                    <button class="hero-btn hero-btn-secondary" onclick="connectWallet()">
+                        <i class="fas fa-wallet"></i>
+                        Connect Wallet
+                    </button>
+                </div>
                 
                 <div class="hero-stats">
-            <div class="stat-card">
-                <div class="stat-value">1,247</div>
+                    <div class="stat-card">
+                        <div class="stat-value">1,247</div>
                         <div class="stat-label">Exoplanets Minted</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value">$2.4M</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">$2.4M</div>
                         <div class="stat-label">Total Volume</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value">5,432</div>
-                <div class="stat-label">Active Collectors</div>
-            </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">5,432</div>
+                        <div class="stat-label">Active Collectors</div>
+                    </div>
                     <div class="stat-card">
                         <div class="stat-value">92.5%</div>
                         <div class="stat-label">AI Accuracy</div>
@@ -982,10 +1153,66 @@
             }
         });
 
+        // Create animated star background
+        function createStarBackground() {
+            const starsContainer = document.getElementById('stars');
+            const numStars = 150;
+            const numShootingStars = 3;
+
+            // Create regular stars
+            for (let i = 0; i < numStars; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                
+                // Random position
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                
+                // Random size (1-3px)
+                const size = Math.random() * 2 + 1;
+                star.style.width = size + 'px';
+                star.style.height = size + 'px';
+                
+                // Random animation delay
+                star.style.animationDelay = Math.random() * 3 + 's';
+                star.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                
+                starsContainer.appendChild(star);
+            }
+
+            // Create shooting stars periodically
+            setInterval(() => {
+                if (document.querySelectorAll('.shooting-star').length < numShootingStars) {
+                    const shootingStar = document.createElement('div');
+                    shootingStar.className = 'shooting-star';
+                    
+                    // Random starting position
+                    const startX = Math.random() * 100;
+                    const startY = Math.random() * 100;
+                    
+                    shootingStar.style.left = startX + '%';
+                    shootingStar.style.top = startY + '%';
+                    
+                    // Random animation duration
+                    shootingStar.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                    
+                    starsContainer.appendChild(shootingStar);
+                    
+                    // Remove after animation
+                    setTimeout(() => {
+                        if (shootingStar.parentNode) {
+                            shootingStar.parentNode.removeChild(shootingStar);
+                        }
+                    }, 4000);
+                }
+            }, 2000);
+        }
+
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
+            createStarBackground();
             setupEventListeners();
-        loadTokens();
+            loadTokens();
         });
     </script>
 </body>
