@@ -4,6 +4,7 @@ import pickle
 import numpy as np
 import random
 import os
+import glob
 from nasa_scraper import NASAExoplanetScraper
 from web3_integration import FilecoinNFTMinter
 from planet_visualizer import PlanetVisualizer
@@ -28,6 +29,44 @@ class ExoplanetClassifier:
         return score > 0.85, score
 
 model = ExoplanetClassifier()
+
+# Function to check if a planet image exists in static/planets/
+def get_existing_planet_image(planet_name):
+    """
+    Check if there's an existing JPG image for a planet in static/planets/
+    Returns the path if found, None otherwise
+    """
+    planets_dir = 'static/planets'
+    
+    # Clean planet name for filename matching
+    clean_name = planet_name.replace(' ', '').replace('-', '').replace('_', '').lower()
+    
+    # Look for JPG files in the planets directory
+    jpg_files = glob.glob(os.path.join(planets_dir, '*.jpg'))
+    
+    # Priority matching: exact match first, then partial matches
+    exact_matches = []
+    partial_matches = []
+    
+    for jpg_file in jpg_files:
+        # Get filename without extension and path
+        filename = os.path.splitext(os.path.basename(jpg_file))[0]
+        clean_filename = filename.replace('_', '').replace('-', '').lower()
+        
+        # Exact match (highest priority)
+        if clean_name == clean_filename:
+            exact_matches.append(jpg_file)
+        # Partial match (lower priority)
+        elif clean_name in clean_filename or clean_filename in clean_name:
+            partial_matches.append(jpg_file)
+    
+    # Return exact match first, then partial match
+    if exact_matches:
+        return f'/static/planets/{os.path.basename(exact_matches[0])}'
+    elif partial_matches:
+        return f'/static/planets/{os.path.basename(partial_matches[0])}'
+    
+    return None
 
 # Token rarity calculation
 def calculate_rarity(radius, period, temp):
@@ -83,7 +122,10 @@ def get_tokens():
             habitability = scraper.calculate_habitability_score(planet)
             rarity = scraper.classify_rarity(habitability)
             
-            tokens.append({
+            # Check if there's an existing image for this planet
+            existing_image = get_existing_planet_image(planet['name'])
+            
+            token_data = {
                 'id': f"EXO-{minter.generate_token_id(planet['name']) % 10000}",
                 'name': planet['name'],
                 'rarity': rarity,
@@ -95,7 +137,14 @@ def get_tokens():
                 'currentFunding': random.randint(0, 30000),
                 'discoveryYear': planet['discovery_year'],
                 'hostStar': planet['host_star']
-            })
+            }
+            
+            # Add existing image path if found
+            if existing_image:
+                token_data['local_image'] = existing_image
+                print(f"✅ Using existing image for {planet['name']}: {existing_image}")
+            
+            tokens.append(token_data)
         
         return jsonify(tokens)
     except:
@@ -139,17 +188,28 @@ def mint_token():
     planet_data['habitability_score'] = habitability
     planet_data['rarity'] = scraper.classify_rarity(habitability)
     
-    # Generate planet image
-    planet_img = visualizer.generate_planet_image({
-        'st_teff': planet_data['star_temp'],
-        'pl_rade': planet_data['radius']
-    })
+    # Check if there's an existing image for this planet
+    existing_image = get_existing_planet_image(planet_name)
     
-    # Save and upload to IPFS
-    img_filename = f"{planet_name.replace(' ', '_')}.png"
-    img_path = f"static/planets/{img_filename}"
-    visualizer.save_image(planet_img, img_path)
-    image_uri = ipfs.upload_image(planet_img, img_filename)
+    if existing_image:
+        # Use existing image
+        print(f"✅ Using existing image for {planet_name}: {existing_image}")
+        img_filename = os.path.basename(existing_image)
+        img_path = f"static/planets/{img_filename}"
+        image_uri = existing_image  # Use local path for existing images
+        planet_img = None  # No need to generate new image
+    else:
+        # Generate new planet image
+        planet_img = visualizer.generate_planet_image({
+            'st_teff': planet_data['star_temp'],
+            'pl_rade': planet_data['radius']
+        })
+        
+        # Save and upload to IPFS
+        img_filename = f"{planet_name.replace(' ', '_')}.png"
+        img_path = f"static/planets/{img_filename}"
+        visualizer.save_image(planet_img, img_path)
+        image_uri = ipfs.upload_image(planet_img, img_filename)
     
     # Create metadata
     metadata = {
@@ -179,6 +239,23 @@ def fetch_nasa_data():
     limit = request.args.get('limit', 20, type=int)
     planets = scraper.fetch_exoplanets(limit)
     return jsonify({'success': True, 'count': len(planets), 'planets': planets})
+
+@app.route('/api/planet-images', methods=['GET'])
+def get_planet_images():
+    """Get list of available planet images in static/planets/"""
+    planets_dir = 'static/planets'
+    jpg_files = glob.glob(os.path.join(planets_dir, '*.jpg'))
+    
+    images = []
+    for jpg_file in jpg_files:
+        filename = os.path.basename(jpg_file)
+        images.append({
+            'filename': filename,
+            'path': f'/static/planets/{filename}',
+            'clean_name': filename.replace('_', '').replace('-', '').lower().replace('.jpg', '')
+        })
+    
+    return jsonify({'success': True, 'images': images, 'count': len(images)})
 
 @app.route('/api/preview', methods=['POST'])
 def preview_planet():
