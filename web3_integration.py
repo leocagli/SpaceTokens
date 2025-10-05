@@ -36,10 +36,15 @@ class FilecoinNFTMinter:
         hash_object = hashlib.sha256(planet_name.encode())
         return int(hash_object.hexdigest()[:16], 16)
     
-    def mint_nft(self, planet_data, owner_address):
+    def mint_nft(self, planet_data, owner_address, metadata_uri=''):
         """Mint NFT for exoplanet (simulation)"""
         token_id = self.generate_token_id(planet_data['name'])
-        metadata = self.generate_metadata(planet_data)
+        
+        if not metadata_uri:
+            metadata = self.generate_metadata(planet_data)
+            metadata_uri = self.store_on_ipfs(metadata)
+        else:
+            metadata = self.generate_metadata(planet_data)
         
         # Simulate minting transaction
         tx_hash = f"0x{hashlib.sha256(f'{token_id}{owner_address}'.encode()).hexdigest()}"
@@ -49,6 +54,7 @@ class FilecoinNFTMinter:
             'token_id': token_id,
             'tx_hash': tx_hash,
             'metadata': metadata,
+            'metadata_uri': metadata_uri,
             'contract_address': '0xSpaceTokensNFT...',
             'network': 'Filecoin Calibration Testnet'
         }

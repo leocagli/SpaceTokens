@@ -3,15 +3,22 @@ from flask_cors import CORS
 import pickle
 import numpy as np
 import random
+import os
 from nasa_scraper import NASAExoplanetScraper
 from web3_integration import FilecoinNFTMinter
+from planet_visualizer import PlanetVisualizer
+from ipfs_uploader import IPFSUploader
 
 app = Flask(__name__)
 CORS(app)
 
-# Initialize NASA scraper and Web3 minter
+# Initialize components
 scraper = NASAExoplanetScraper()
 minter = FilecoinNFTMinter()
+visualizer = PlanetVisualizer(size=512)
+ipfs = IPFSUploader(service='pinata')
+
+os.makedirs('static/planets', exist_ok=True)
 
 # Simulated AI model (replace with real trained model)
 class ExoplanetClassifier:
@@ -132,8 +139,38 @@ def mint_token():
     planet_data['habitability_score'] = habitability
     planet_data['rarity'] = scraper.classify_rarity(habitability)
     
+    # Generate planet image
+    planet_img = visualizer.generate_planet_image({
+        'st_teff': planet_data['star_temp'],
+        'pl_rade': planet_data['radius']
+    })
+    
+    # Save and upload to IPFS
+    img_filename = f"{planet_name.replace(' ', '_')}.png"
+    img_path = f"static/planets/{img_filename}"
+    visualizer.save_image(planet_img, img_path)
+    image_uri = ipfs.upload_image(planet_img, img_filename)
+    
+    # Create metadata
+    metadata = {
+        'name': planet_name,
+        'description': f'Exoplanet with {habitability}% habitability score',
+        'image': image_uri,
+        'attributes': [
+            {'trait_type': 'Habitability', 'value': habitability},
+            {'trait_type': 'Rarity', 'value': planet_data['rarity']},
+            {'trait_type': 'Orbital Period', 'value': f"{planet_data['orbital_period']} days"},
+            {'trait_type': 'Radius', 'value': f"{planet_data['radius']} Earth radii"},
+            {'trait_type': 'Star Temp', 'value': f"{planet_data['star_temp']} K"}
+        ]
+    }
+    metadata_uri = ipfs.upload_metadata(metadata)
+    
     # Mint NFT
-    result = minter.mint_nft(planet_data, owner_address)
+    result = minter.mint_nft(planet_data, owner_address, metadata_uri)
+    result['image_uri'] = image_uri
+    result['metadata_uri'] = metadata_uri
+    result['local_image'] = f'/static/planets/{img_filename}'
     
     return jsonify(result)
 
@@ -143,5 +180,19 @@ def fetch_nasa_data():
     planets = scraper.fetch_exoplanets(limit)
     return jsonify({'success': True, 'count': len(planets), 'planets': planets})
 
+@app.route('/api/preview', methods=['POST'])
+def preview_planet():
+    data = request.json
+    planet_img = visualizer.generate_planet_image({
+        'st_teff': data.get('temp', 5778),
+        'pl_rade': data.get('radius', 1.0)
+    })
+    img_base64 = visualizer.image_to_base64(planet_img)
+    return jsonify({'image': f'data:image/png;base64,{img_base64}'})
+
 if __name__ == '__main__':
+    print("🚀 Space Tokens - NASA Exoplanet NFTs")
+    print("🌍 http://localhost:5000")
+    print("🎨 Planet visualizer ready")
+    print("🌐 IPFS uploader configured")
     app.run(debug=True, port=5000)

@@ -1,131 +1,122 @@
-# 🌌 Space Tokens - Tokenizing the Universe
+# 🌌 Space Tokens - NASA Exoplanet NFTs
 
-AI-powered exoplanet discovery platform that converts NASA data into collectible NFTs to fund space science research.
+Tokeniza exoplanetas descubiertos por NASA usando IA y blockchain. Proyecto para NASA Space Apps Challenge.
 
-## 🚀 NASA Space Apps Challenge 2024
+## 🚀 Flujo del Proyecto
 
-**Challenge**: A World Away: Hunting for Exoplanets with AI
+1. **Data Collection**: Datos reales de NASA Exoplanet Archive (misiones Kepler/TESS)
+2. **AI Classification**: Modelo ML analiza período orbital, radio, temperatura estelar
+3. **Image Generation**: Visualización procedural del planeta basada en datos reales
+4. **IPFS Upload**: Imagen + metadata subidos a IPFS
+5. **Token Generation**: Candidatos con alta confianza se convierten en NFTs
+6. **Rarity Assignment**: Basado en zona habitable y características únicas
+7. **Funding Mechanism**: Coleccionistas financian investigación de exoplanetas específicos
 
-## ✨ Features
+## 🎨 Características
 
-- 🤖 **AI Classification**: Machine learning model to identify exoplanet candidates
-- 🎨 **NFT Tokenization**: Convert discoveries into unique collectible tokens
-- 💰 **Science Funding**: Direct funding mechanism for space research
-- 📊 **Real NASA Data**: Based on Kepler/TESS mission data
-- 🌟 **Rarity System**: Ultra Rare, Rare, Uncommon, Common based on habitability
+- **Imágenes Generadas**: Visualización procedural basada en temperatura estelar y radio
+- **IPFS Storage**: Imágenes y metadata en IPFS (Pinata)
+- **Filecoin Calibration**: NFTs minteados en testnet de Filecoin
+- **NASA Data**: Datos reales del Exoplanet Archive
+- **Rarity System**: Ultra Rare, Rare, Uncommon, Common
+- **Funding**: Sistema de financiamiento para investigación
 
-## 🛠️ Tech Stack
-
-- **Backend**: Python + Flask
-- **AI/ML**: Scikit-learn, Pandas, NumPy
-- **Frontend**: HTML5, CSS3, Vanilla JavaScript
-- **Blockchain**: Filecoin + Web3.py
-- **Smart Contracts**: Solidity (ERC-721 NFT)
-- **Data Source**: NASA Exoplanet Archive API
-
-## 📦 Installation
+## 📦 Instalación
 
 ```bash
-# Clone repository
-git clone https://github.com/yourusername/space-tokens.git
 cd space-tokens
-
-# Install dependencies
 pip install -r requirements.txt
-
-# Run application
 python app.py
 ```
 
-Visit `http://localhost:5000`
+## 🔧 Configuración
 
-## 🎯 How It Works
+### IPFS (Pinata)
+Edita `ipfs_uploader.py`:
+```python
+api_key = 'TU_PINATA_API_KEY'
+api_secret = 'TU_PINATA_SECRET'
+```
 
-1. **Data Collection**: Real-time scraping from NASA Exoplanet Archive API
-2. **AI Classification**: ML model analyzes orbital period, radius, star temperature
-3. **Habitability Scoring**: Calculate Earth-similarity index (0-100)
-4. **NFT Minting**: Mint ERC-721 tokens on Filecoin with IPFS metadata
-5. **Token Generation**: High-confidence candidates become NFTs
-6. **Rarity Assignment**: Based on habitability zone and unique characteristics
-7. **Funding Mechanism**: Smart contract escrow for research funding
+### Filecoin Wallet
+Obtén FIL testnet: https://faucet.calibration.fildev.network/
+
+## 🌐 API Endpoints
+
+- `GET /` - Frontend
+- `GET /api/tokens` - Lista de exoplanetas tokenizados
+- `POST /api/classify` - Clasifica candidato con IA
+- `POST /api/mint` - Mintea NFT con imagen generada
+- `POST /api/preview` - Preview de imagen del planeta
+- `POST /api/fund` - Financia investigación
+- `GET /api/nasa/fetch` - Obtiene datos frescos de NASA
+
+## 🎯 Tecnologías
+
+- **Backend**: Flask + Python
+- **Blockchain**: Web3.py + Filecoin
+- **Storage**: IPFS (Pinata)
+- **Images**: Pillow (generación procedural)
+- **Data**: NASA Exoplanet Archive API
+- **AI**: scikit-learn
+
+## 📊 Metadata NFT
+
+```json
+{
+  "name": "Kepler-442b",
+  "description": "Exoplanet with 87% habitability score",
+  "image": "ipfs://QmXxx.../kepler442b.png",
+  "attributes": [
+    {"trait_type": "Habitability", "value": 87},
+    {"trait_type": "Rarity", "value": "Ultra Rare"},
+    {"trait_type": "Orbital Period", "value": "112.3 days"},
+    {"trait_type": "Radius", "value": "1.34 Earth radii"}
+  ]
+}
+```
+
+## 🖼️ Generación de Imágenes
+
+Las imágenes se generan proceduralmente basadas en:
+- **Color**: Temperatura de la estrella anfitriona
+- **Tamaño**: Radio del planeta
+- **Textura**: Manchas aleatorias para variación
+- **Atmósfera**: Efecto glow según características
 
 ## 🌟 Rarity Tiers
 
-- **Ultra Rare**: Earth-like planets in habitable zone (1-1.5 R⊕, 200-400 day period)
-- **Rare**: Potentially habitable (1.5-2 R⊕)
-- **Uncommon**: Interesting candidates (2-3 R⊕)
-- **Common**: Confirmed exoplanets
+- **Ultra Rare** (>80 habitability): Zona habitable perfecta
+- **Rare** (60-80): Candidato prometedor
+- **Uncommon** (40-60): Interesante para estudio
+- **Common** (<40): Datos básicos
 
-## 📊 Model Performance
+## 📝 Smart Contract
 
-- **Accuracy**: 92.5%
-- **Training Data**: NASA Kepler Mission TCEs
-- **Features**: Orbital period, planet radius, star temperature
-- **Algorithm**: Random Forest Classifier
+Contrato ERC-721 en Filecoin con:
+- Mint con metadata URI
+- Funding mechanism
+- Habitability scores on-chain
+- Withdraw funds (owner only)
 
-## 🎨 Token Metadata
+Ver `contracts/SpaceTokens.sol`
 
-Each token includes:
-- Unique ID (EXO-XXXX)
-- Planet name
-- Rarity tier
-- AI confidence score
-- Orbital characteristics
-- Funding goal and progress
-
-## 🚀 Deployment
-
-### Heroku
+## 🚀 Deploy
 
 ```bash
-# Login to Heroku
-heroku login
+# Local
+python app.py
 
-# Create app
-heroku create space-tokens
-
-# Deploy
+# Producción (Heroku)
 git push heroku main
 ```
 
-### Render
+## 🔗 Links
 
-1. Connect GitHub repository
-2. Select Python environment
-3. Build command: `pip install -r requirements.txt`
-4. Start command: `gunicorn app:app`
-
-## 🔗 API Endpoints
-
-- `GET /api/tokens` - Get all minted tokens
-- `POST /api/classify` - Classify new exoplanet
-- `POST /api/mint` - Mint NFT for exoplanet
-- `POST /api/fund` - Fund research
-- `GET /api/nasa/fetch` - Fetch fresh NASA data
-
-## 📝 Future Enhancements
-
-- [ ] Train ML model with full Kepler dataset
-- [ ] Deploy to Filecoin mainnet
-- [ ] IPFS pinning service integration
-- [ ] Community DAO for funding decisions
-- [ ] 3D visualization with Three.js
-- [ ] Telescope observation scheduling API
-
-## 🤝 Contributing
-
-Contributions welcome! Please read CONTRIBUTING.md first.
-
-## 📄 License
-
-MIT License - see LICENSE file
-
-## 🙏 Acknowledgments
-
-- NASA Exoplanet Archive
-- Kepler and TESS missions
-- Space Apps Challenge organizers
+- NASA Exoplanet Archive: https://exoplanetarchive.ipac.caltech.edu/
+- Filecoin Calibration: https://faucet.calibration.fildev.network/
+- Pinata IPFS: https://pinata.cloud/
 
 ---
 
-**Built for NASA Space Apps Challenge 2024** 🚀
+**Preservando descubrimientos científicos en blockchain descentralizado** 🌍🚀
