@@ -1,56 +1,72 @@
 import requests
-import pandas as pd
 from datetime import datetime
 
 class NASAExoplanetScraper:
     def __init__(self):
-        self.base_url = "https://exoplanetarchive.ipac.caltech.edu/TAP/sync"
+        self.base_url = "https://exoplanetarchive.ipac.caltech.edu/cgi-bin/nstedAPI/nph-nstedAPI"
         
     def fetch_exoplanets(self, limit=100):
-        """Fetch exoplanet data from NASA Exoplanet Archive"""
-        query = f"""
-        SELECT TOP {limit}
-            pl_name, hostname, sy_snum, sy_pnum, discoverymethod,
-            disc_year, pl_orbper, pl_rade, pl_masse, pl_eqt,
-            st_teff, st_rad, st_mass, sy_dist
-        FROM ps
-        WHERE pl_rade IS NOT NULL 
-        AND pl_orbper IS NOT NULL
-        AND st_teff IS NOT NULL
-        ORDER BY disc_year DESC
-        """
-        
+        """Fetch exoplanet data from NASA Exoplanet Archive using the correct API"""
+        # Use the 'cumulative' table (Kepler Objects of Interest) with proper API parameters
         params = {
-            'query': query,
-            'format': 'json'
+            'table': 'cumulative',
+            'format': 'json',
+            'select': 'kepoi_name,kepler_name,koi_disposition,koi_period,koi_prad,koi_teq,koi_steff,koi_srad,koi_slogg,koi_score'
         }
         
         try:
             response = requests.get(self.base_url, params=params, timeout=30)
             response.raise_for_status()
+            
+            # The API returns data in a different format, check if it's a list or has a data field
             data = response.json()
             
-            if not data:
+            # Handle different response formats
+            if isinstance(data, dict) and 'data' in data:
+                planets_data = data['data']
+            elif isinstance(data, list):
+                planets_data = data
+            else:
+                print(f"Unexpected data format: {type(data)}")
                 return []
             
-            # Process and clean data
+            if not planets_data:
+                return []
+            
+            # Process and clean data - limit results and filter for valid data
             exoplanets = []
-            for planet in data:
-                exoplanets.append({
-                    'name': planet.get('pl_name', 'Unknown'),
-                    'host_star': planet.get('hostname', 'Unknown'),
-                    'discovery_method': planet.get('discoverymethod', 'Unknown'),
-                    'discovery_year': planet.get('disc_year', 0),
-                    'orbital_period': planet.get('pl_orbper', 0),
-                    'radius': planet.get('pl_rade', 0),
-                    'mass': planet.get('pl_masse', 0),
-                    'equilibrium_temp': planet.get('pl_eqt', 0),
-                    'star_temp': planet.get('st_teff', 0),
-                    'star_radius': planet.get('st_rad', 0),
-                    'star_mass': planet.get('st_mass', 0),
-                    'distance': planet.get('sy_dist', 0),
-                    'fetched_at': datetime.now().isoformat()
-                })
+            for i, planet in enumerate(planets_data):
+                if i >= limit * 2:  # Get more data to filter
+                    break
+                
+                # Filter for planets with valid data
+                if (planet.get('koi_prad') and planet.get('koi_period') and 
+                    planet.get('koi_steff') and planet.get('koi_prad') > 0 and 
+                    planet.get('koi_period') > 0 and planet.get('koi_steff') > 0):
+                    
+                    # Use Kepler name if available, otherwise use KOI name
+                    planet_name = planet.get('kepler_name') or planet.get('kepoi_name', 'Unknown')
+                    
+                    exoplanets.append({
+                        'name': planet_name,
+                        'host_star': planet.get('kepoi_name', 'Unknown').split('.')[0] if planet.get('kepoi_name') else 'Unknown',
+                        'discovery_method': 'Transit',
+                        'discovery_year': 2015,  # Approximate for Kepler data
+                        'orbital_period': planet.get('koi_period', 0),
+                        'radius': planet.get('koi_prad', 0),
+                        'mass': 0,  # Not available in cumulative table
+                        'equilibrium_temp': planet.get('koi_teq', 0),
+                        'star_temp': planet.get('koi_steff', 0),
+                        'star_radius': planet.get('koi_srad', 0),
+                        'star_mass': 0,  # Not available in cumulative table
+                        'distance': 0,  # Not available in cumulative table
+                        'koi_score': planet.get('koi_score', 0),
+                        'disposition': planet.get('koi_disposition', 'Unknown'),
+                        'fetched_at': datetime.now().isoformat()
+                    })
+                    
+                    if len(exoplanets) >= limit:
+                        break
             
             return exoplanets
             
@@ -61,6 +77,10 @@ class NASAExoplanetScraper:
     def calculate_habitability_score(self, planet):
         """Calculate habitability score based on planet characteristics"""
         score = 0
+        
+        # Use KOI score as base if available
+        if planet.get('koi_score'):
+            score = planet['koi_score'] * 100
         
         # Radius similar to Earth (0.5 - 2.0 Earth radii)
         if 0.5 <= planet['radius'] <= 2.0:
